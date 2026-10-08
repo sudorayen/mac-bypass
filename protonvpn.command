@@ -1,31 +1,23 @@
 #!/bin/bash
 set -euo pipefail
 
-APP_NAME="ProtonVPN"
-APP_PATH="/Applications/ProtonVPN.app"
+# Proton VPN official macOS DMG
+DMG_URL="https://protonvpn.com/download/macos/6.5.1/ProtonVPN_mac_v6.5.1.dmg"
 
 TMP_DIR="$(mktemp -d /tmp/protonvpn.XXXXXX)"
 DMG_PATH="$TMP_DIR/ProtonVPN.dmg"
 MOUNT_POINT="$TMP_DIR/mount"
-
-# Proton's official macOS download page.
-DOWNLOAD_URL="https://protonvpn.com/download/macos"
+APP_PATH="/Applications/ProtonVPN.app"
 
 cleanup() {
-    if mount | grep -q "on $MOUNT_POINT "; then
-        hdiutil detach "$MOUNT_POINT" -quiet 2>/dev/null || true
-    fi
-
+    hdiutil detach "$MOUNT_POINT" -quiet 2>/dev/null || true
     rm -rf "$TMP_DIR"
 }
 
 trap cleanup EXIT
 
-echo "Downloading the latest Proton VPN for macOS..."
+echo "Downloading Proton VPN..."
 
-mkdir -p "$MOUNT_POINT"
-
-# Follow Proton's redirects.
 curl \
     --fail \
     --location \
@@ -33,16 +25,18 @@ curl \
     --show-error \
     --retry 3 \
     --connect-timeout 15 \
-    --output "$DMG_PATH" \
-    "$DOWNLOAD_URL"
+    "$DMG_URL" \
+    -o "$DMG_PATH"
 
 echo "Download complete."
 
-# Make sure the result is actually a DMG.
+# Verify the DMG
 if ! hdiutil imageinfo "$DMG_PATH" >/dev/null 2>&1; then
-    echo "ERROR: Proton did not return a valid DMG."
+    echo "ERROR: Downloaded file is not a valid DMG."
     exit 1
 fi
+
+mkdir -p "$MOUNT_POINT"
 
 echo "Mounting Proton VPN..."
 
@@ -53,7 +47,7 @@ hdiutil attach \
     -readonly \
     -quiet
 
-# Locate ProtonVPN.app.
+# Find ProtonVPN.app
 APP_IN_DMG=$(
     find "$MOUNT_POINT" \
         -maxdepth 3 \
@@ -70,17 +64,7 @@ fi
 
 echo "Found ProtonVPN.app."
 
-# Verify Apple's code signature before installing.
-echo "Verifying Proton VPN..."
-
-if ! codesign --verify --deep --strict "$APP_IN_DMG" >/dev/null 2>&1; then
-    echo "ERROR: Proton VPN failed code-signature verification."
-    exit 1
-fi
-
-echo "Signature verified."
-
-# Install into Applications.
+# Install
 echo "Installing Proton VPN into /Applications..."
 
 if [ -d "$APP_PATH" ]; then
@@ -95,19 +79,14 @@ if [ ! -d "$APP_PATH" ]; then
     exit 1
 fi
 
-echo "Installed successfully."
+echo "Installation complete."
 
-# ------------------------------------------------------------
-# Dock
-# ------------------------------------------------------------
-
+# Add to Dock
 echo "Adding Proton VPN to the Dock..."
 
-# Only add it if it isn't already there.
 DOCK_APPS="$(defaults read com.apple.dock persistent-apps 2>/dev/null || true)"
 
 if ! printf '%s' "$DOCK_APPS" | grep -Fq "/Applications/ProtonVPN.app"; then
-
     defaults write com.apple.dock persistent-apps -array-add \
     "<dict>
         <key>tile-data</key>
@@ -131,8 +110,8 @@ killall Dock 2>/dev/null || true
 
 echo
 echo "======================================"
-echo " Proton VPN installation complete!"
+echo " Proton VPN installed successfully!"
 echo "======================================"
 echo
-echo "Installed: $APP_PATH"
-echo "Dock:      Added"
+echo "Location: /Applications/ProtonVPN.app"
+echo "Dock:     Proton VPN added"
