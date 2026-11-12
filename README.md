@@ -7,4 +7,4 @@ curl -sSL https://raw.githubusercontent.com/sudorayen/mac-bypass/main/apps.comma
 
 mac address changer
 
-curl -fsSL httpsL//raw.githubusercontent.com/sudorayen/mac-bypass/main/macaddresschange.command | bash
+curl -fsSL httpsL//raw.githubusercontent.com/sudorayen/mac-bypass/main/macaddresschanger.command | bash
