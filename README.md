@@ -4,7 +4,7 @@ This is full of different bypass scripts
 -apps.command-
 
 curl -sSL https://raw.githubusercontent.com/sudorayen/mac-bypass/main/apps.command | bash
+-------------------------
+-mac address changer-
 
-mac address changer
-
-curl -fsSL httpsL//raw.githubusercontent.com/sudorayen/mac-bypass/main/macaddresschanger.command | bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/sudorayen/mac-bypass/main/macaddresschanger.command)"
